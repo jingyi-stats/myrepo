@@ -1,0 +1,80 @@
+---
+title: "Comprehensive Molecular Characterization of Gastric Adecarcinoma Repeat - S1"
+author: "Jingyi Tang"
+date: "10/12/2020"
+output: html_document
+---
+
+# S1: Biospecimen Collection, Quality Control, and Processing
+
+## Sample Acquisition
+
+ALL: primary tumor samples + a companion normal tissue specimen (blood/blood components including DNA extracted at TSS)
+
+PARTLY: adjacent non-tumour gastric tissue
+
+__Date__ collected from 13 TSS and shipped to a BCR during 5/6/2010 - 10/17/2012
+
+__Requirement__ no prior treatment for disease
+
+__Access__  
+
+* stages of cases  
+* pathology quality control on tumor + adjacent normal tissue from BCR or TSS  
+* H&E stained section used for independent pathology review: tumor part is cancer and normal part is normal
+* tumour nuclei % [≥60%], necrosis % [≤20%], other pathology annotations  
+  + diffuse tumor type does not follow this rule
+  
+## Sample Processing
+
+DNA + RNA __for both tumor and normal__ exacted at BCR using Qiagen  
+
+## Sample Qualification
+
+* #tumor with germline controls = 618
+  + 343 qualified, n = 295 used
+  + 73 cases w/ matched non-tumor stomach tissue
+  
+### Microsatellite Insability Assay(实验)  
+
+* test: a panel of 4 mononucleoride repeat loci (polyadenine tracts BAT25, BAT26, BAT40, transformaing growth factor receptor type II) + 3 dinucleoride repeat loci (CA repeat) + pentanucleoride loci (Penta D and Penta E) included to evaluate sample identity
+
+* MSI = variation in #microsatellite repeats btw tumor and matched normal tissue/mononuclear blood cells -> PCR + capillary electrophoresis to confirm MSI
+
+* MSS (stable) = 0 marker altered
+* MSI-L (low instable) = <40% markers altered = 1-2 markers
+* MSI (high instable) = >40% markers altered = 3 - 7 markers
+
+Individual markers w/ 1-6 value on presence/absense of MSI shift (*__w/ MSI__*: 1 = homo allele, 2 = hetero allele w/ LOH, 3 = hetero w/o LOH; *__w/o MSI__*: 4 = homo, 5 = hetero w/ LOH, 6 = hetero w/o LOH), allele homo/heterzygosity and loss of heterozygosity (LOH) if relevant.
+
+Penta D and E are also score, but not useful for MSI classification.
+
+## Review of pathology, TNM stage, anatomic site, and tumour recurrence
+
+Locations of cancer are assigned to 287 out of 295 tumors.
+
+Gastric cancer classification:   
+                    and 
+* Intestinal               * papillary
+* Diffuse                  * tubular
+* Mixed                    * mucinous
+* Indeterminate            * poorly cohesive
+                           * other rare variants
+
+## Recurrence and Survival
+
+* Recurrence during follow-up (Yes/No/NA) [201 available, 31 recurrence]
+* Survival date of death [57 died, 230 follow-up, median length 362.5 days]
+
+* Kaplan-Meier  curves (survfit) for overall survivl
+* p-values: Xoc proportional hazards with a log-likelihood test (coxph)
+
+* There is association between molecular subtypes and clinical data
+
+## Relations to Country of Origin
+
+country is included and some countries have higher proportion with one type of cancer
+different countries, different set of pattern of gastric cancer?
+no evidence (p>.05)
+
+
