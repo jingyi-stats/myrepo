@@ -15,7 +15,6 @@ set.seed(1)
 
 # Messenger RNA library construction, sequencing and analysis
 
-
 * 2 mg of total RNA samples arrayed into a 96-well plate
 * PolyA+ mRNA purfited using 96-well MultiMACS mRNA idolation kit on MultiMACS 96 separator with on-column DNasel-treatment
 * $\mu_L$
