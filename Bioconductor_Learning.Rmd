@@ -1,0 +1,45 @@
+---
+title: "Learn Bioconducter"
+author: "Jingyi Tang"
+date: "10/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+
+```
+
+## Ground Work
+
+在R中，逻辑运算符(logical operator)有!, &, &&, |, ||, xor, is TRUE等等。&与&&,|与||有什么区别呢？在R中将&和|称为短逻辑符，&&及||称为长逻辑符。长逻辑符只比较左边和右边的第一个元素，而短逻辑符会一一比较所有的元素。
+
+逻辑运算符      |         含义        |    syntax
+--------------- | ------------------- | ---------------
+!               | 不                  | !x
+&               | 元素（矢量化）和    | x & y
+&&              | 和（仅限单个元素）  | x && y
+\|              | 元素（矢量化）或    | x \| y
+\|\|            | 或（仅限单个元素）  | x \|\| y
+XOR()           | 元素（矢量化）异或  | XOR(x, y)
+
+* 注意||运算符计算左条件，如果左条件为TRUE，则永远不会计算右侧。如果第一个是复杂操作的结果，这可以节省时间。  
+* 当第一个参数的第一个元素为FALSE时， &&运算符同样返回FALSE而不评估第二个参数。
+
+```{r}
+
+x = 5
+
+# stops execution of the current expression and executes an error action.
+# x > 6 || stop("X is too small")
+# Error: X is too small
+
+x > 3 || stop("X is too small")
+
+# check logic
+# is.logical()
+
+```
+
