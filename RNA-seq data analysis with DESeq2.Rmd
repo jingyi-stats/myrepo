@@ -1,0 +1,52 @@
+---
+title: "Follow: RNA-seq data analysis with DESeq2"
+author: "Jingyi Tang"
+date: "10/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+set.seed(1)
+library(DESeq2)
+library(tximport)
+library(apeglm)
+library(AnnotationHub)
+library(ReportingTools)
+library(Glimma)
+library(splatter)
+library(zinbwave)
+
+```
+
+## Overview
+
+A quick overview of the most useful functions in the DESeq2 package, and a basic RNA-seq analysis
+
+* how to quantify transcript expression from FASTQ files using Salmon  
+* import quantification from Salmon with tximport and tximeta  
+* generate plots for quality control and exploratory data analysis EDA (also using MultiQC)  
+* perform differential expression (DE) (also using apeglm)  
+* overlap with other experimental data (using AnnotationHub)  
+* build reports (using ReportingTools and Glimma).   
+* a short example of integration of DESeq2 with the zinbwave package for single-cell RNA-seq differential expression  
+
+## Goals and Objectives
+
+__Learning goals__
+
+* Visually assess quality of RNA-seq data
+* Perform basic differential analysis of RNA-seq data
+* Compare RNA-seq results with other experimental data
+
+__Learning objectives__
+
+* Quantify transcript expression from FASTQ files
+* Import quantification into R/Bioconductor
+* Perform quality control and exploratory data analysis
+* Perform differential expression
+* Overlap with other experimental data
+* Build dynamic reports
+* Integrate DESeq2 and zinbwave for single-cell RNA-seq data
+

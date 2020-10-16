@@ -14,6 +14,8 @@ set.seed(1)
 
 ## Ground Work
 
+### 逻辑运算符
+
 在R中，逻辑运算符(logical operator)有!, &, &&, |, ||, xor, is TRUE等等。&与&&,|与||有什么区别呢？在R中将&和|称为短逻辑符，&&及||称为长逻辑符。长逻辑符只比较左边和右边的第一个元素，而短逻辑符会一一比较所有的元素。
 
 逻辑运算符      |         含义        |    syntax
@@ -40,6 +42,90 @@ x > 3 || stop("X is too small")
 
 # check logic
 # is.logical()
+
+a = c(TRUE, FALSE, TRUE, FALSE)
+b = c(FALSE, FALSE, TRUE, TRUE)
+c = c(TRUE, FALSE, FALSE, FALSE)
+
+a & b
+
+a && b
+
+a | c
+
+a || c
+
+```
+
+因为R是不需要声明变量的，任何以字母或者.起始的字符组合都可以成为变量名，所以在操作中容易错误的覆盖已经使用的变量。可以使用ls()函数来显示当前搜索路径下所有的变量名，然后再决定应该使用很什么样的新变量名。
+
+```{r}
+
+ls()
+
+```
+
+### 条件控制语句
+
+在R中，条件控制语句与主流编程语言保持一至。基本的条件语句有： if, ifelse, switch, for, while, next, break。
+
+ifelse(test, yes, no)  
+test: an object which can be coerced to logical mode.
+yes: return values for true elements of test
+no: return values for false elements of test
+
+写：带我长发及腰，少年娶我可好？
+
+```{r}
+
+# trial 1: short hair
+hair_length = 25
+
+waist_height = 110
+
+height = 162
+
+marry_me = FALSE
+
+# 如果头发长度大于身高-腰高，则marry_me为TRUE
+if(hair_length >= height - waist_height){marry_me = TRUE}
+ifelse(marry_me, "Yes", "No")
+
+# trial start!
+day = 0
+# 也可以写 !marry_me
+if(marry_me == FALSE){
+  while(hair_length < height - waist_height){
+    day = day + 1
+    hair_length = hair_length + .1
+  }
+  marry_me = TRUE
+}
+
+day
+
+hair_length = 25
+marry_me = FALSE
+wait = 100*365
+
+for(day in 1:wait){
+  if(hair_length >= height - waist_height){
+    marry_me = TRUE
+    break
+  }else{
+    # runif()在uniform分布[0, 1]里随机一个数字
+    if(runif(1) < 0.5){
+      next
+    } 
+    hair_length = hair_length + 0.1
+  }
+}
+
+day
+
+# break breaks out of a for, while or repeat loop; control is transferred to the first statement outside the inner-most loop. 
+
+# next halts the processing of the current iteration and advances the looping index. Both break and next apply only to the innermost of nested loops.
 
 ```
 
