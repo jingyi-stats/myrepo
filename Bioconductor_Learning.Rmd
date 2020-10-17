@@ -129,3 +129,44 @@ day
 
 ```
 
+### R Packages
+
+R的运行环境，由R内核以及包组成。包是连接用户指令和计算的桥梁。没有包，R无法实现用户的想法。
+
+所谓包(Package)，就是基于R系统的标准化的代码，数据及文档的文件集合。我们可以将包视为模块化的应用插件，当用户需要用到某一功能时，只需要调用有这一功能的包及其依赖环境（依赖包通常会被自动调用）。当需要使用到另外一项功能时，调用另外的包即可。所以，包可被视为集成某些功能的R插件。
+
+R在启动时会自动加载一些软件包，它们是：parallel、stats、graphics、grDevices、utils、datasets、methods、base。这些包被称为基础包(Base packages)，它们是R系统的一部分，由R Core开发并维护。它们用于实现R的最基本功能。
+
+在R安装时，有一些不是R Core开发的包也会默认安装，它们被称为推荐包(Recommended packages)，但它们不会被自动加载。
+
+所有其它的包统称为扩展包(Contributed packages)，它们是开放式开发的结果，所以被称为集体贡献(contributed)。
+
+提供可用于安装的带有版本控制的包的网站被称为安装源(Repository)。这些安装源会为每个包提供两种形式的文件用于下载安装：源码(Source)，以及二进制文件(Binary)。源码是人类可读的源代码及其文档组合而成的包的一种封装形式；二进制文件是将包依据指定的操作平台（现在只提供两种平台windows和Mac OS X）经过编译形成的机器可读的二进制文件封装形式。R扩展包的安装，可以通过这两种方式来完成。
+
+安装好的包将被放在一个指定的目录下。这个目录被称为库(Library)。当需要使用到某一个包的时候，通过运行library()函数来加载软件包，其过程就是到库中去寻找需要加载的软件包，并将其命名空间加载至当前运行环境下。
+
+```{r}
+
+# 查看当前运行环境
+sessionInfo()
+
+```
+
+Bioconductor本质上就是基于R的用于生物学研究的软件包的大集合。它们由Bioconductor Core来管理。
+
+#### Getting Help
+
+使用Vignettes获取对软件包功能及范例的整体印象。如果已知一个软件包可以实现某项功能，但是不清楚具体的操作流程，或者对该软件包的其它功能也感兴趣，阅读Vignettes是最直接的办法。Vignettes的中文大意是小插图，小品文。在R/Bioconductor中，它就是一个综合说明文档。它将软件包中的函数有机的结合起来，示例性地提供该软件包最典型的使用场景和代码。它还有可能提供该软件包与R/Bioconductor中其它软件包的关系，并给出结合多软件包使用的范例。Vignettes可以图文并茂，所以它比之一般的帮助文档更具有可读性。在Bioconductor中，Vignettes是每个包必须包含的文档（在R中不要求），可见其在Bioconductor软件包中的重要性。如果我们想了解motifStack（必须是已安装的包）这个包可以做什么，有哪些作者强调的功能，我们可以使用vignette("motifStack")来获得其综合说明文档。
+
+```{r}
+
+# 查看package的vignette
+# vigenette("")
+
+```
+
+### R的数据结构
+
+#### Abstract
+
+数据结构是数据类型的封装方式。R的基本数据结构分为两类（如下表所示），一类是可以存放__相同类型数据的(同质的)__，一类是可以存放__不同类型数据的(异质的)__。什么是相同类型数据呢？我们知道，诸如C之类的计算机语言将数据类型化分为char, float (double), int, bool等类型，相应的，在R中，基本的数据类型被分为character, double, integer以及logical。double及integer类型又被统一称为numeric类型。如果数据都为character，或者double，或者integer，或者logical，就被称为同质的(Homogeneous)，否则被称为异质的(Heterogeneous)[Citation not found]。

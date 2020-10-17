@@ -17,10 +17,14 @@ library(ReportingTools)
 library(Glimma)
 library(splatter)
 library(zinbwave)
+# a RangedSummarizedExperiment object of read counts in genes for an RNA-Seq experiment on four human airway smooth muscle cell lines treated with dexamethasone
+# 'RNA-Seq Transcriptome Profiling Identifies CRISPLD2 as a Glucocorticoid Responsive Gene that Modulates Cytokine Function in Airway Smooth Muscle Cells.' PLoS One. 2014 Jun 13;9(6):e99625. PMID: 24926665. GEO: GSE52778.
+# to view documentation for the version of this package installed in the system: browseVignettes("airway")
+library(airway)
 
 ```
 
-## Overview
+# Overview
 
 A quick overview of the most useful functions in the DESeq2 package, and a basic RNA-seq analysis
 
@@ -50,3 +54,25 @@ __Learning objectives__
 * Build dynamic reports
 * Integrate DESeq2 and zinbwave for single-cell RNA-seq data
 
+# Preparing data for DESeq2
+
+## Experimental data
+
+The data used in this workflow is stored in the _airway_ package. 
+
+__Takeaways:__  
+
+* airway smooth muscle cells treated with dexamethasone
+  + Dexamethasone: a synthetic glucocorticoid steroid with anti-inflammatory effects
+    + Glucocorticoids are used by people with asthma to reduce inflammation of the airways
+* In this experiment:
+  + 4 primary human airway smooth muscle cell lines
+  + treated with 1 micromolar dexamethasone for 18 hours
+  + For each of the four cell lines
+    + 1 treated sample
+    + 1 untreated sample  
+    
+1. import RNA-seq quantification data using an alternative dataset
+2. load counts for the airway dataset, which were counted using summarizeOverlaps from the GenomicAlignments package
+
+GAP: recommend the _tximport_ pipeline for producing count matrices, but we do not yet have a Bioconductor package containing the necessary quantification files for the airway dataset
