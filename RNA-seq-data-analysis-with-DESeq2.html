@@ -443,10 +443,133 @@ summary {
 </ul></li>
 </ul>
 <ol style="list-style-type: decimal">
-<li>import RNA-seq quantification data using an alternative dataset</li>
-<li>load counts for the airway dataset, which were counted using summarizeOverlaps from the GenomicAlignments package</li>
+<li>import RNA-seq quantification data using an alternative dataset (the <em>tximportData</em> package which is used in the <em>tximport</em> vignette)</li>
+<li>load counts for the airway dataset, which were counted using <em>summarizeOverlaps</em> from the <em>GenomicAlignments</em> package</li>
 </ol>
 <p>GAP: recommend the <em>tximport</em> pipeline for producing count matrices, but we do not yet have a Bioconductor package containing the necessary quantification files for the airway dataset</p>
+</div>
+<div id="modeling-count-data" class="section level2">
+<h2>Modeling count data</h2>
+<p>The <strong>count-based statistical methods</strong>, such as <em>DESeq2</em> (Love, Huber, and Anders 2014), <em>edgeR</em> (Robinson, McCarthy, and Smyth 2009), <em>limma</em> with the voom method (Law et al. 2014), <em>DSS</em> (Wu, Wang, and Wu 2013), <em>EBSeq</em> (Leng et al. 2013) and <em>baySeq</em> (Hardcastle and Kelly 2010), expect input data as obtained, e.g., from RNA-seq or another high-throughput sequencing experiment, in the form of a <strong>matrix of counts</strong>.</p>
+<p>The value in the <strong>i-th row</strong> and the <strong>j-th column</strong> of the matrix tells how many reads (or fragments, for paired-end RNA-seq) have been assigned to <strong>gene i</strong> in <strong>sample j</strong>.</p>
+<table>
+<thead>
+<tr class="header">
+<th>gene #</th>
+<th>sample 1</th>
+<th>sample 2</th>
+<th>…</th>
+<th>sample j</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(gene_1\)</span></td>
+<td><span class="math inline">\(x_{11}\)</span></td>
+<td><span class="math inline">\(x_{12}\)</span></td>
+<td>…</td>
+<td><span class="math inline">\(x_{1j}\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(gene_2\)</span></td>
+<td><span class="math inline">\(x_{21}\)</span></td>
+<td><span class="math inline">\(x_{22}\)</span></td>
+<td>…</td>
+<td><span class="math inline">\(x_{2j}\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(gene_3\)</span></td>
+<td><span class="math inline">\(x_{31}\)</span></td>
+<td><span class="math inline">\(x_{32}\)</span></td>
+<td>…</td>
+<td><span class="math inline">\(x_{3j}\)</span></td>
+</tr>
+<tr class="even">
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(gene_{i-1}\)</span></td>
+<td><span class="math inline">\(x_{i-1,1}\)</span></td>
+<td><span class="math inline">\(x_{i-1,2}\)</span></td>
+<td>…</td>
+<td><span class="math inline">\(x_{i-1,j}\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(gene_i\)</span></td>
+<td><span class="math inline">\(x_{i1}\)</span></td>
+<td><span class="math inline">\(x_{i2}\)</span></td>
+<td>…</td>
+<td><span class="math inline">\(x_{ij}\)</span></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The values in the matrix should be counts of sequencing reads/fragments.<br />
+</li>
+<li>This is important for the statistical models used by DESeq2 and edgeR to hold, as only counts allow assessing the measurement precision correctly.<br />
+</li>
+<li>It is important to not provide counts that were pre-normalized for sequencing depth (also called library size), as the statistical model is most powerful when applied to un-normalized counts and is designed to account for library size differences internally.</li>
+</ul>
+<p>Analogously, for other types of assays[试验], the <strong>rows of the matrix</strong> might correspond e.g., to <strong>binding regions</strong> (with ChIP-Seq), <strong>species of bacteria</strong> (with metagenomic datasets), or <strong>peptide sequences</strong> (with quantitative mass spectrometry).</p>
+</div>
+<div id="transcript-abundances" class="section level2">
+<h2>Transcript abundances</h2>
+<p>In this workflow, the shown method is how to use transcript abundances as quantified by the <a href="https://combine-lab.github.io/salmon/">Salmon</a> (Patro et al. 2017) software package. Salmon and similar packages estimate the relative abundances of all (known, annotated) transcripts without aligning reads. Because estimating the abundance of the transcripts involves an inference step, the counts are <em>estimated</em>. Most methods either use a statistical framework called Estimation-Maximization or Bayesian techniques to estimate the abundances and counts.</p>
+<p>Following quantification, we will use the tximport (Soneson, Love, and Robinson 2015) package for assembling estimated count and offset matrices for use with Bioconductor differential gene expression packages.</p>
+<p>The advantages of using the transcript abundance quantifiers in conjunction with tximport to produce gene-level count matrices and normalizing offsets, are:</p>
+<ol style="list-style-type: decimal">
+<li>this approach corrects for any potential changes in gene length across samples (e.g. from differential isoform usage) (Trapnell et al. 2013)<br />
+</li>
+<li>some of these methods are substantially faster and require less memory and less disk usage compared to alignment-based methods it is possible to avoid discarding those fragments that can align to multiple genes with homologous sequence (Robert and Watson 2015).<br />
+</li>
+<li>Note that transcript abundance quantifiers skip the generation of large files which store read alignments (SAM or BAM files), instead producing smaller files which store estimated abundances, counts and effective lengths per transcript. For more details, see the manuscript describing this approach (Soneson, Love, and Robinson 2015) and the tximport package vignette for software details.</li>
+</ol>
+<ul>
+<li><em>Salmon</em> is a wicked-fast program to produce a highly-accurate, transcript-level quantification estimates from RNA-seq data.<br />
+</li>
+<li>All you need to run Salmon is a FASTA file containing your reference transcripts and a (set of) FASTA/FASTQ file(s) containing your reads. Optionally, Salmon can make use of pre-computed alignments (in the form of a SAM/BAM file) to the transcripts rather than the raw reads. <a href="https://combine-lab.github.io/salmon/getting_started/">Example</a><br />
+</li>
+<li>The <strong>quasi-mapping-based</strong> mode of Salmon runs in two phases; indexing and quantification.<br />
+</li>
+<li>The indexing step is independent of the reads, and only need to be run one for a particular set of reference transcripts.<br />
+</li>
+<li>The quantification step, obviously, is specific to the set of RNA-seq reads and is thus run more frequently.<br />
+</li>
+<li>The <strong>alignment-based</strong> mode of Salmon does not require indexing.
+<ul>
+<li>Rather, you can simply provide Salmon with a FASTA file of the transcripts and a SAM/BAM file containing the alignments you wish to use for quantification.</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="importing-into-r-with-trimport" class="section level1">
+<h1>Importing into R with trimport</h1>
+<div id="specifying-file-locations" class="section level2">
+<h2>Specifying file locations</h2>
+<ul>
+<li>use tximport to import the data into R and perform statistical analysis using Bioconductor packages</li>
+</ul>
+<pre class="r"><code># import data
+
+# find names of R system files
+dir &lt;- system.file(&quot;extdata&quot;, package=&quot;tximportData&quot;)
+
+# list the files in a directory/folder
+list.files(dir)</code></pre>
+<pre><code>##  [1] &quot;alevin&quot;                  &quot;cufflinks&quot;              
+##  [3] &quot;kallisto&quot;                &quot;kallisto_boot&quot;          
+##  [5] &quot;refseq&quot;                  &quot;rsem&quot;                   
+##  [7] &quot;sailfish&quot;                &quot;salmon&quot;                 
+##  [9] &quot;salmon_dm&quot;               &quot;salmon_gibbs&quot;           
+## [11] &quot;samples_extended.txt&quot;    &quot;samples.txt&quot;            
+## [13] &quot;tx2gene.csv&quot;             &quot;tx2gene.ensembl.v87.csv&quot;
+## [15] &quot;tx2gene.gencode.v27.csv&quot;</code></pre>
+<pre class="r"><code>list.files(file.path(dir,&quot;salmon&quot;))</code></pre>
+<pre><code>## [1] &quot;ERR188021&quot; &quot;ERR188088&quot; &quot;ERR188288&quot; &quot;ERR188297&quot; &quot;ERR188329&quot; &quot;ERR188356&quot;</code></pre>
 </div>
 </div>
 

@@ -17,6 +17,7 @@ library(ReportingTools)
 library(Glimma)
 library(splatter)
 library(zinbwave)
+library("tximportData")
 # a RangedSummarizedExperiment object of read counts in genes for an RNA-Seq experiment on four human airway smooth muscle cell lines treated with dexamethasone
 # 'RNA-Seq Transcriptome Profiling Identifies CRISPLD2 as a Glucocorticoid Responsive Gene that Modulates Cytokine Function in Airway Smooth Muscle Cells.' PLoS One. 2014 Jun 13;9(6):e99625. PMID: 24926665. GEO: GSE52778.
 # to view documentation for the version of this package installed in the system: browseVignettes("airway")
@@ -72,7 +73,71 @@ __Takeaways:__
     + 1 treated sample
     + 1 untreated sample  
     
-1. import RNA-seq quantification data using an alternative dataset
-2. load counts for the airway dataset, which were counted using summarizeOverlaps from the GenomicAlignments package
+1. import RNA-seq quantification data using an alternative dataset (the _tximportData_ package which is used in the _tximport_ vignette)
+2. load counts for the airway dataset, which were counted using _summarizeOverlaps_ from the _GenomicAlignments_ package
 
 GAP: recommend the _tximport_ pipeline for producing count matrices, but we do not yet have a Bioconductor package containing the necessary quantification files for the airway dataset
+
+## Modeling count data
+
+The __count-based statistical methods__, such as _DESeq2_ (Love, Huber, and Anders 2014), _edgeR_ (Robinson, McCarthy, and Smyth 2009), _limma_ with the voom method (Law et al. 2014), _DSS_ (Wu, Wang, and Wu 2013), _EBSeq_ (Leng et al. 2013) and _baySeq_ (Hardcastle and Kelly 2010), expect input data as obtained, e.g., from RNA-seq or another high-throughput sequencing experiment, in the form of a __matrix of counts__.
+
+The value in the __i-th row__ and the __j-th column__ of the matrix tells how many reads (or fragments, for paired-end RNA-seq) have been assigned to __gene i__ in __sample j__.
+
+gene #      |  sample 1  |  sample 2   |  ...   |  sample j
+----------- | ---------- | ----------- | ------ | --------
+$gene_1$    | $x_{11}$   | $x_{12}$    | ...   | $x_{1j}$  
+$gene_2$    | $x_{21}$   | $x_{22}$    | ...   | $x_{2j}$
+$gene_3$    | $x_{31}$   | $x_{32}$    | ...   | $x_{3j}$
+...         | ...        | ...         | ...   | ...
+$gene_{i-1}$| $x_{i-1,1}$   | $x_{i-1,2}$    | ...   | $x_{i-1,j}$
+$gene_i$    | $x_{i1}$   | $x_{i2}$    | ...   | $x_{ij}$
+  
+* The values in the matrix should be counts of sequencing reads/fragments.  
+* This is important for the statistical models used by DESeq2 and edgeR to hold, as only counts allow assessing the measurement precision correctly.   
+* It is important to not provide counts that were pre-normalized for sequencing depth (also called library size), as the statistical model is most powerful when applied to un-normalized counts and is designed to account for library size differences internally.
+
+Analogously, for other types of assays[试验], the __rows of the matrix__ might correspond e.g., to __binding regions__ (with ChIP-Seq), __species of bacteria__ (with metagenomic datasets), or __peptide sequences__ (with quantitative mass spectrometry).
+
+
+## Transcript abundances
+
+In this workflow, the shown method is how to use transcript abundances as quantified by the [Salmon](https://combine-lab.github.io/salmon/) (Patro et al. 2017) software package. Salmon and similar packages estimate the relative abundances of all (known, annotated) transcripts without aligning reads. Because estimating the abundance of the transcripts involves an inference step, the counts are _estimated_. Most methods either use a statistical framework called Estimation-Maximization or Bayesian techniques to estimate the abundances and counts.
+
+Following quantification, we will use the tximport (Soneson, Love, and Robinson 2015) package for assembling estimated count and offset matrices for use with Bioconductor differential gene expression packages.
+
+The advantages of using the transcript abundance quantifiers in conjunction with tximport to produce gene-level count matrices and normalizing offsets, are:
+
+1. this approach corrects for any potential changes in gene length across samples (e.g. from differential isoform usage) (Trapnell et al. 2013)  
+2. some of these methods are substantially faster and require less memory and less disk usage compared to alignment-based methods
+it is possible to avoid discarding those fragments that can align to multiple genes with homologous sequence (Robert and Watson 2015).  
+3. Note that transcript abundance quantifiers skip the generation of large files which store read alignments (SAM or BAM files), instead producing smaller files which store estimated abundances, counts and effective lengths per transcript. For more details, see the manuscript describing this approach (Soneson, Love, and Robinson 2015) and the tximport package vignette for software details.  
+
+ * _Salmon_ is a wicked-fast program to produce a highly-accurate, transcript-level quantification estimates from RNA-seq data.  
+ * All you need to run Salmon is a FASTA file containing your reference transcripts and a (set of) FASTA/FASTQ file(s) containing your reads. Optionally, Salmon can make use of pre-computed alignments (in the form of a SAM/BAM file) to the transcripts rather than the raw reads.  [Example](https://combine-lab.github.io/salmon/getting_started/)  
+ * The __quasi-mapping-based__ mode of Salmon runs in two phases; indexing and quantification.   
+  + The indexing step is independent of the reads, and only need to be run one for a particular set of reference transcripts.   
+  + The quantification step, obviously, is specific to the set of RNA-seq reads and is thus run more frequently.  
+* The __alignment-based__ mode of Salmon does not require indexing. 
+  + Rather, you can simply provide Salmon with a FASTA file of the transcripts and a SAM/BAM file containing the alignments you wish to use for quantification.
+
+
+# Importing into R with trimport
+
+## Specifying file locations
+
+* use tximport to import the data into R and perform statistical analysis using Bioconductor packages
+
+```{r}
+
+# import data
+
+# find names of R system files
+dir <- system.file("extdata", package="tximportData")
+
+# list the files in a directory/folder
+list.files(dir)
+
+list.files(file.path(dir,"salmon"))
+
+```
