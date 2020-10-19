@@ -18,12 +18,16 @@ library(Glimma)
 library(splatter)
 library(zinbwave)
 library("tximportData")
+library("readr")
+library("jsonlite")
 # a RangedSummarizedExperiment object of read counts in genes for an RNA-Seq experiment on four human airway smooth muscle cell lines treated with dexamethasone
 # 'RNA-Seq Transcriptome Profiling Identifies CRISPLD2 as a Glucocorticoid Responsive Gene that Modulates Cytokine Function in Airway Smooth Muscle Cells.' PLoS One. 2014 Jun 13;9(6):e99625. PMID: 24926665. GEO: GSE52778.
 # to view documentation for the version of this package installed in the system: browseVignettes("airway")
 library(airway)
 
 ```
+
+The original post of the workshop can be found [here](https://bioconductor.github.io/BiocWorkshops/rna-seq-data-analysis-with-deseq2.html). 
 
 # Overview
 
@@ -130,7 +134,7 @@ it is possible to avoid discarding those fragments that can align to multiple ge
 
 ```{r}
 
-# import data
+# look at the files in the package tximportData
 
 # find names of R system files
 dir <- system.file("extdata", package="tximportData")
@@ -138,6 +142,198 @@ dir <- system.file("extdata", package="tximportData")
 # list the files in a directory/folder
 list.files(dir)
 
+# list the files in salmon in dir
 list.files(file.path(dir,"salmon"))
 
 ```
+
+The identifiers used here are the ERR identifiers from the [European Nucleotide Archive](https://www.ebi.ac.uk/ena/browser/). We need to create a named vector pointing to the quantification files. We will create a vector of filenames first by reading in a table that contains the sample IDs, and then combining this with _dir_ and _"quant.sf.gz"_. (We gzipped the quantification files to make the data package smaller, this is not a problem for R functions that we use to import the files.)
+
+```{r}
+
+# create a named vector pointing to the quantification files
+
+samples = read.table(file.path(dir, "samples.txt"), header = TRUE)
+
+samples
+
+# 构建平台独立（横跨os, windows, linux系统）的文件路径
+files = file.path(dir, "salmon", samples$run, "quant.sf.gz")
+
+# paste0可以连接多个字符串，将对象自动转换为字符串，还可以处理向量
+# paste0默认sep = ""
+# set the names of files
+names(files) = paste0("sample", 1:6)
+
+names(files)
+
+all(file.exists(files))
+
+```
+
+## Mapping transcripts to genes
+
+Transcripts need to be associated with gene IDs for gene-level summarization. We therefore will construct a __data.frame__ called __tx2gene__ with two columns: 1) transcript ID and 2) gene ID. 
+
+The column names do not matter but this column order must be used. The __transcript ID__ must be the __same__ one used in the __abundance files__. This can most easily be accomplished by downloading the GTF file at the same time that the transcriptome FASTA is downloaded, and generating tx2gene from the GTF file using Bioconductor’s TxDb infrastructure.
+
+Generating a TxDb from a GTF file can be easily accomplished with the makeTxDbFromGFF function. This step requires a few minutes of waiting, and a large file. We therefore skip this step, but show the code that is used to create the tx2gene table, assuming the correct TxDb object has been created.
+
+```{r}
+
+library("TxDb.Hsapiens.UCSC.hg38.knownGene")
+
+txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+
+txdb
+
+k <- keys(txdb, keytype="TXNAME")
+
+head(k)
+
+tx2gene <- select(txdb, k, "GENEID", "TXNAME")
+
+head(tx2gene)
+
+```
+
+In this case, we’ve used the Gencode v27 CHR transcripts to build our Salmon index, and we used makeTxDbFromGFF and code similar to the chunk above to build the tx2gene table. We then read in a pre-constructed tx2gene table:
+
+```{r}
+
+tx2gene <- read_csv(file.path(dir, "tx2gene.gencode.v27.csv"))
+head(tx2gene)
+
+```
+
+## Tximport command
+
+Finally the following line of code imports Salmon transcript quantifications into R, collapsing to the gene level using the information in tx2gene.
+
+```{r}
+
+txi <- tximport(files, type="salmon", tx2gene=tx2gene)
+
+```
+
+The txi object is simply a list of matrices (and one character vector):
+
+```{r}
+
+names(txi)
+
+txi$counts[1:3, 1:3]
+
+txi$length[1:3, 1:3]
+
+txi$abundance[1:3, 1:3]
+
+txi$countsFromAbundance
+
+```
+
+If we were continuing with the GEUVADIS samples, we would then create a DESeqDataSet with the following line of code. Because there are no differences among the samples (same population and same sequencing batch), we specify a design formula of ~1, meaning we can only fit an intercept term – so we cannot perform differential expression analysis with these samples.
+
+```{r}
+
+dds <- DESeqDataSetFromTximport(txi, samples, ~1)
+
+dds$center
+
+dds$pop
+
+```
+
+## Exploratory data analysis
+
+### Simple EDA
+
+We will now switch over to the airway experiment, counts of which are already prepared in a SummarizedExperiment object. In this case, the object that we load is the output of the summarizeOverlaps function in the GenomicAlignments package, and the exact code used to produce this object can be seen by typing vignette("airway") into the R session, to pull up the airway software vignette. There are multiple ways to produce a count table and import it into DESeq2, and these are summarized in this section of the [RNA-seq gene-level workflow](https://bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#deseq2-import-functions).
+
+```{r}
+
+data("airway")
+
+```
+
+We want to specify that untrt is the reference level for the dex variable:
+
+```{r}
+
+airway$dex <- relevel(airway$dex, "untrt")
+airway$dex
+
+```
+
+We can quickly check the millions of fragments that uniquely aligned to the genes (the second argument of round tells how many decimal points to keep).
+
+```{r}
+
+head(assay(airway))
+
+colSums(assay(airway))
+
+round(colSums(assay(airway)) / 1e6, 1 )
+
+```
+
+We can inspect the information about the samples, by pulling out the colData slot of the SummarizedExperiment:
+
+```{r}
+
+colData(airway)
+
+table(airway$cell)
+
+table(airway$dex)
+
+```
+
+If we had not already loaded DESeq2, we would do this, and then create a DESeqDataSet. We want to control for the cell line, while testing for differences across dexamethasone treatment, so we use a design of ~ cell + dex:
+
+```{r}
+
+dds = DESeqDataSet(airway, design = ~ cell + dex)
+
+```
+
+We will perform a __minimal filtering__ to reduce the size of the dataset. We do not need to retain genes if they do not have a count of 5 or more for 4 or more samples as these genes will have no statistical power to detect differences, and no information to compute distances between samples.
+
+```{r}
+
+keep = rowSums(counts(dds) >= 5) >= 4
+
+table(keep)
+
+dds = dds[keep,]
+
+```
+
+Some very basic exploratory analysis is to examine a boxplot of the counts for each sample. We will take the logarithm so that large counts do not dominate the boxplot:
+
+```{r}
+
+boxplot(log10(counts(dds) + 1))
+
+```
+
+The main function in DESeq2 involves computation of size factors which normalize for differences in sequencing depth among samples. We can also compute these size factors manually, so that the normalized counts are available for plotting:
+
+```{r}
+
+dds <- estimateSizeFactors(dds)
+boxplot(log10(counts(dds,normalized=TRUE)+1))
+
+```
+
+7.4.2 Data transformation for EDA
+
+Taking the logarithm of counts plus a pseudocount of 1 is a common transformation, but it tends to inflate the sampling variance of low counts such that it is even larger than biological variation across groups of samples. In DESeq2 we therefore provide transformations which produce log-scale data such that the systematic trends have been removed. Our recommended transformation is the variance-stabilizing transformation, or VST, and it can be called with the vst function:
+
+```{r}
+
+vsd <- vst(dds)
+class(vsd)
+
+```
+
